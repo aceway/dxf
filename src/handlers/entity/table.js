@@ -16,7 +16,6 @@ export function process(tuples) {
 		textHeight: [],
 
 		cellType: [],
-		cellFlag: [],
 		cellMerge:  [],
 
 		borderWidth: [],
@@ -45,17 +44,6 @@ export function process(tuples) {
 				break
 			case 30:
 				table.z = value
-				break
-
-			case 40:
-				if (tableState) {
-					table.hPad = Number(value) 
-				}
-				break
-			case 41:
-				if (!tableState) {
-					table.vPad = Number(value) 
-				}
 				break
 
 			case 91:
@@ -98,11 +86,6 @@ export function process(tuples) {
 					table.cellType.push(Number(value) === 1 ? 'text' : 'block')
 				}
 				break
-			case 172:
-				if (tableState) {
-					table.cellFlag.push(Number(value))
-				}
-				break
 			case 173:
 				if (tableState) {
 					table.cellMerge.push(Number(value))
@@ -120,10 +103,6 @@ export function process(tuples) {
 				}
 				break
 			
-			case 280:
-				table.dataVersion = value
-				break
-
 			case 1:   // ASCII string content
 				if (tableState) {
 					doWithLowVersion = true
@@ -182,7 +161,6 @@ export function process(tuples) {
 	if (text != null) {
 		table.texts.push(text)
 	}
-	text = null
 
 	table.cells = [];
 	let offsetX = table.x
@@ -204,9 +182,8 @@ export function process(tuples) {
 			z: table.z,
 			width: width,
 			height: height,
-			textHeight: table.textHeight[i] || width / (txt.length || 1) / 0.618,
+			textHeight: table.textHeight[i] || height  * 0.618,
 			cellType: table.cellType[i] || 'text',
-			cellFlag: table.cellFlag[i] || 0,
 			cellMerge: table.cellMerge[i] || 0,
 		}
 		table.cells.push(gridCell)
@@ -218,22 +195,12 @@ export function process(tuples) {
 			offsetX += table.colWidth[ colIdx ] || 1
 		}	
 	}
-	table.name = `${table.texts[0] || ""}-${table.rowCount}-${table.colCount}`
-	table.key = table.name
-
-	if (table.handle) {
-		table.key += "-" + table.handle.replace("*", "")
-	}
-	if (table.block) {
-		table.key += "-" + table.block.replace("*", "")
-	}
 
 	delete table.texts
 	delete table.rowHeight
 	delete table.colWidth
 	delete table.textHeight
 	delete table.cellType
-	delete table.cellFlag
 	delete table.cellMerge
 	delete table.borderWidth
 	delete table.borderHeight
